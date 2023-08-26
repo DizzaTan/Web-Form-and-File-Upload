@@ -11,6 +11,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $fileType = strtolower(pathinfo($_FILES["file"]["name"], PATHINFO_EXTENSION));
     $targetFile = "uploads/" . basename($_FILES["file"]["name"]);
 
+    // Verifikasi reCAPTCHA
+    $recaptchaSecretKey = "YOUR_SECRET_KEY";
+    $recaptchaResponse = $_POST['g-recaptcha-response'];
+
+    $verifyUrl = "https://www.google.com/recaptcha/api/siteverify";
+    $verifyData = [
+        'secret' => $recaptchaSecretKey,
+        'response' => $recaptchaResponse,
+        'remoteip' => $_SERVER['REMOTE_ADDR']
+    ];
+
+    $verifyResponse = file_get_contents($verifyUrl . '?' . http_build_query($verifyData));
+    $responseData = json_decode($verifyResponse);
+
+    if (!$responseData->success) {
+        echo "reCAPTCHA verification failed!";
+        die;
+    }
+
     // Validasi email
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         echo "Invalid email format!";
